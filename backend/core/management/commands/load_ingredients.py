@@ -23,7 +23,7 @@ class Command(BaseCommand):
             try:
                 data = json.loads(data_file.read())
             except json.JSONDecodeError as e:
-                print(f'Ошибка в json-данных файла {e}')
+                raise ValueError(f'Ошибка в json-данных файла {e}')
             objects = []
             current_objects_count = Ingredient.objects.count()
             for item in data:
