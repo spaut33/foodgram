@@ -17,7 +17,7 @@ User = get_user_model()
 
 MODEL_FIELDS = [
     [User, ['username', 'first_name', 'last_name', 'password']],
-    [Recipe, ['user_id', 'name', 'image', 'description', 'cooking_time']],
+    [Recipe, ['user_id', 'name', 'image', 'text', 'cooking_time']],
     [Ingredient, ['name', 'measurement_unit_id']],
     [Tag, ['name', 'slug', 'color']],
     [Unit, ['name']],
