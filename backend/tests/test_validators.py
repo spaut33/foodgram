@@ -14,6 +14,7 @@ class TestValidators:
 
     def test_right_username_validator(self):
         right_username = 'right_username'
-        assert bool(username_validator(right_username)) == True, (
-            f'Ошибка в работе валидатора на имени {right_username}'
+        validated_username = username_validator(right_username)
+        assert validated_username == right_username, (
+            f'Ошибка в возвращаемом значении {validated_username} валидатора'
         )

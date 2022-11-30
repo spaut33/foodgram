@@ -14,4 +14,4 @@ for app_dir in APP_DIRS:
             f'приложения {app_dir}'
         )
 
-pytest_plugins = ['tests.fixtures.fixture_users']
+pytest_plugins = ['tests.fixtures.fixture_users', 'tests.fixtures.fixture_data']

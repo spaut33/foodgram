@@ -7,7 +7,7 @@ User = get_user_model()
 class UserViewSet(DjoserUsers):
     """Пользователи на основе Djoser."""
     
-    http_method_names = ['get', 'post', 'head']
+    http_method_names = ('get', 'post', 'head')
 
     def reset_password(self, request, *args, **kwargs):
         return None
