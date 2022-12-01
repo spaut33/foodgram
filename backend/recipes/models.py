@@ -1,8 +1,11 @@
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Index
+from django.db.models.functions import Upper
 from django.utils.translation import gettext_lazy as _
 
 
@@ -13,7 +16,9 @@ class Tag(models.Model):
     """Модель тега."""
 
     name = models.CharField(
-        max_length=settings.TAG_MAX_LENGTH, verbose_name=_('Название')
+        max_length=settings.TAG_MAX_LENGTH,
+        verbose_name=_('Название'),
+        db_index=True,
     )
     color = ColorField(format='hex', default='#FFFFFF')
     slug = models.SlugField(
@@ -36,6 +41,7 @@ class Unit(models.Model):
         max_length=settings.UNIT_NAME_MAX_LENGTH,
         verbose_name=_('Название'),
         unique=True,
+        db_index=True,
     )
 
     class Meta:
@@ -56,6 +62,7 @@ class Ingredient(models.Model):
         max_length=settings.INGREDIENT_NAME_MAX_LENGTH,
         verbose_name=_('Название'),
         null=False,
+        db_index=True,
     )
     measurement_unit = models.ForeignKey(
         Unit,
@@ -91,9 +98,12 @@ class Recipe(models.Model):
         max_length=settings.RECIPE_NAME_MAX_LENGTH,
         verbose_name=_('Название'),
         null=False,
+        db_index=True,
     )
     text = models.TextField(verbose_name=_('Описание'))
-    image = models.ImageField(verbose_name=_('Изображение'))
+    image = models.ImageField(
+        verbose_name=_('Изображение'), upload_to='recipes/images/'
+    )
     cooking_time = models.PositiveSmallIntegerField(
         default=1,
         verbose_name=_('Время приготовления, мин.'),
@@ -103,7 +113,7 @@ class Recipe(models.Model):
     date_added = models.DateTimeField(
         verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True
     )
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='recipes',
@@ -124,6 +134,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = _('Рецепт')
         verbose_name_plural = _('Рецепты')
+        ordering = ('-date_added',)
 
     def __str__(self):
         return self.MODEL_STRING.format(name=self.name)
@@ -132,7 +143,7 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     """Модель количества ингредиента для рецепта."""
 
-    MODEL_STRING = _('Ингредиенты рецепта {recipe:.30}')
+    MODEL_STRING = '{ingredient:.30}: {amount} {unit}'
 
     recipe = models.ForeignKey(
         Recipe,
@@ -155,7 +166,11 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.MODEL_STRING.format(recipe=self.recipe.name)
+        return self.MODEL_STRING.format(
+            ingredient=self.ingredient.name,
+            amount=self.amount,
+            unit=self.ingredient.measurement_unit,
+        )
 
 
 class Favorite(models.Model):
@@ -177,6 +192,9 @@ class Favorite(models.Model):
         related_name='favorite_recipes',
         db_index=True,
     )
+    date_added = models.DateTimeField(
+        verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True
+    )
 
     class Meta:
         constraints = [
@@ -186,6 +204,7 @@ class Favorite(models.Model):
         ]
         verbose_name = _('Избранный рецепт')
         verbose_name_plural = _('Избранные рецепты')
+        ordering = ('-date_added',)
 
     def __str__(self):
         return self.MODEL_STRING.format(
@@ -196,9 +215,14 @@ class Favorite(models.Model):
 class ShoppingCart(models.Model):
     """Модель список покупок пользователя"""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    user = models.ForeignKey(
+        User,
+        related_name='shoppingcart_recipes',
+        on_delete=models.CASCADE,
+        db_index=True,
+    )
     recipes = models.ManyToManyField(
-        Recipe, related_name='carts', db_index=True
+        Recipe, related_name='shoppingcart_recipes', db_index=True
     )
     date_added = models.DateTimeField(
         verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True

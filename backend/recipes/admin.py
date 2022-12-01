@@ -1,4 +1,3 @@
-from datetime import datetime
 
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
@@ -36,6 +35,6 @@ class RecipeIngredientInLine(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'text', 'cooking_time', 'user', 'date_added')
+    list_display = ('name', 'text', 'cooking_time', 'author', 'date_added')
     readonly_fields = ('date_added',)
     inlines = (RecipeIngredientInLine,)

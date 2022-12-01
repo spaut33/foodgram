@@ -57,6 +57,9 @@ class Subscription(models.Model):
         related_name='subscribers',
         verbose_name='Юзер, на кого подписываются',
     )
+    date_added = models.DateTimeField(
+        verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True
+    )
 
     class Meta:
         constraints = [

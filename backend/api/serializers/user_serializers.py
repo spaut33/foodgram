@@ -54,9 +54,11 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and obj.subscriptions.filter(
-            subscription=user
+        return (
+            user.is_authenticated
+            and obj.subscriptions.filter(subscription=user).exists()
         )
 
     class Meta(BaseUserSerializer.Meta):
         fields = BaseUserSerializer.Meta.fields + ('is_subscribed',)
+

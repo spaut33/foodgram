@@ -17,7 +17,7 @@ User = get_user_model()
 
 MODEL_FIELDS = [
     [User, ['username', 'first_name', 'last_name', 'password']],
-    [Recipe, ['user_id', 'name', 'image', 'text', 'cooking_time']],
+    [Recipe, ['author_id', 'name', 'image', 'text', 'cooking_time']],
     [Ingredient, ['name', 'measurement_unit_id']],
     [Tag, ['name', 'slug', 'color']],
     [Unit, ['name']],
@@ -29,7 +29,7 @@ MODEL_FIELDS = [
 
 MODEL_M2M_FIELDS = [
     [Recipe, ['tags', 'ingredients']],
-    [ShoppingCart, ['recipes']],
+    [ShoppingCart, ['recipe']],
 ]
 
 

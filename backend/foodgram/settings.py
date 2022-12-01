@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'djoser',
     'colorfield',
+    'django_filters',
     'core',
     'users',
     'recipes',
@@ -100,8 +101,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 6,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
@@ -143,8 +143,8 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'HIDE_USERS': False,
     'PERMISSIONS': {
-        'user_create': ['rest_framework.permissions.AllowAny'],
         'user_list': ['rest_framework.permissions.AllowAny'],
+        'user': ['rest_framework.permissions.AllowAny'],
     },
     'SERIALIZERS': {
         'user': 'api.serializers.user_serializers.UserSerializer',

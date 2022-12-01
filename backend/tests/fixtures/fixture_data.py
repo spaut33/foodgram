@@ -17,7 +17,7 @@ def ingredient(measurement_unit):
 
 @pytest.fixture
 def recipe(user):
-    return Recipe.objects.create(name='Delicious Fried Chicken', user=user)
+    return Recipe.objects.create(name='Delicious Fried Chicken', author=user)
 
 
 @pytest.fixture
