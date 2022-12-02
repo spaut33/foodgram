@@ -49,7 +49,8 @@ class Subscription(models.Model):
     IS_CLEAR = False
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions'
+        User, on_delete=models.CASCADE, related_name='subscriptions',
+        verbose_name='Подписчик'
     )
     subscription = models.ForeignKey(
         User,
@@ -68,6 +69,8 @@ class Subscription(models.Model):
                 name='Unique user subscription',
             )
         ]
+        verbose_name = _('Подписка')
+        verbose_name_plural = _('Подписки')
 
     def __str__(self):
         return self.MODEL_STRING.format(

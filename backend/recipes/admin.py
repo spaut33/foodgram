@@ -1,8 +1,15 @@
 
 from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
 
-from recipes.models import Ingredient, Tag, Unit, Recipe, RecipeIngredient
+from recipes.models import (
+    Ingredient,
+    Tag,
+    Unit,
+    Recipe,
+    RecipeIngredient,
+    Favorite,
+)
+from users.models import Subscription
 
 
 @admin.register(Tag)
@@ -38,3 +45,14 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'text', 'cooking_time', 'author', 'date_added')
     readonly_fields = ('date_added',)
     inlines = (RecipeIngredientInLine,)
+
+
+@admin.register(Favorite)
+class FavoritesAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'user')
+    list_filter = ('recipe', 'user')
+    search_fields = ('recipe__name', 'user__username')
+
+@admin.register(Subscription)
+class SubscriptionsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'subscription')

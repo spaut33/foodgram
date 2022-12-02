@@ -27,19 +27,17 @@ class IngredientFilter(filters.FilterSet):
 class RecipeFilterSet(filters.FilterSet):
     is_favorited = filters.BooleanFilter(method='get_favorite_recipes')
     is_in_shopping_cart = filters.BooleanFilter(method='get_shopping_cart')
-    tags = filters.AllValuesMultipleFilter(
-        field_name='tags__slug', label='Tags'
-    )
+    tags = filters.Filter(method='filter_tags')
 
     class Meta:
         model = Recipe
         fields = ('author',)
 
-    # def filter_tags(self, queryset, name, value):
-    #     tags = self.request.query_params.getlist('tags', None)
-    #     if tags:
-    #         queryset = queryset.filter(tags__slug__in=tags).distinct()
-    #     return queryset
+    def filter_tags(self, queryset, name, value):
+        tags = self.request.query_params.getlist('tags', None)
+        if tags:
+            queryset = queryset.filter(tags__slug__in=tags).distinct()
+        return queryset
 
     def get_favorite_recipes(self, queryset, name, value):
         """Фильтр рецептов, добавленных в избранное."""
@@ -54,5 +52,5 @@ class RecipeFilterSet(filters.FilterSet):
     def get_shopping_cart(self, queryset, name, value):
         """Фильтр рецептов, добавленных в список покупок."""
         if value:
-            in_shopping_cart = self.request.user.shoppingcart_recipes.all()
+            queryset = self.request.user.shoppingcart.recipe.all()
         return queryset

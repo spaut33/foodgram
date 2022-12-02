@@ -1,11 +1,9 @@
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Index
-from django.db.models.functions import Upper
+
 from django.utils.translation import gettext_lazy as _
 
 
@@ -92,7 +90,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     """Модель рецепта."""
 
-    MODEL_STRING = _('Рецепт {name:.50}')
+    MODEL_STRING = _('{name:.50}')
 
     name = models.CharField(
         max_length=settings.RECIPE_NAME_MAX_LENGTH,
@@ -137,7 +135,9 @@ class Recipe(models.Model):
         ordering = ('-date_added',)
 
     def __str__(self):
-        return self.MODEL_STRING.format(name=self.name)
+        return self.MODEL_STRING.format(
+            name=self.name
+        )
 
 
 class RecipeIngredient(models.Model):
@@ -208,20 +208,20 @@ class Favorite(models.Model):
 
     def __str__(self):
         return self.MODEL_STRING.format(
-            name=self.recipe, user=self.user.get_username()
+            recipe=self.recipe.name, user=self.user.get_username()
         )
 
 
 class ShoppingCart(models.Model):
     """Модель список покупок пользователя"""
 
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
-        related_name='shoppingcart_recipes',
+        related_name='shoppingcart',
         on_delete=models.CASCADE,
         db_index=True,
     )
-    recipes = models.ManyToManyField(
+    recipe = models.ManyToManyField(
         Recipe, related_name='shoppingcart_recipes', db_index=True
     )
     date_added = models.DateTimeField(

@@ -1,12 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from api.filters import IngredientFilter, RecipeFilterSet
 from api.pagination import LimitPagePagination
@@ -19,10 +16,11 @@ from api.serializers.recipe_serializers import (
 from recipes.models import Ingredient, Recipe, Tag, Favorite
 
 
-class RecipeViewSet(ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецептов."""
 
     serializer_class = RecipeSerializer
+    subscribe_serializers_class = RecipeSubscribeSerializer
     queryset = Recipe.objects.select_related('author').all()
     pagination_class = LimitPagePagination
     filterset_class = RecipeFilterSet
@@ -30,16 +28,16 @@ class RecipeViewSet(ModelViewSet):
     @action(
         methods=('post', 'delete'),
         detail=True,
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
             try:
                 Favorite.objects.create(user=request.user, recipe=recipe)
-                serializer = RecipeSubscribeSerializer(recipe)
                 return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
+                    self.subscribe_serializers_class(recipe).data,
+                    status=status.HTTP_201_CREATED,
                 )
             except IntegrityError as error:
                 return Response(
@@ -55,7 +53,9 @@ class RecipeViewSet(ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TagViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin):
+class TagViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin
+):
     """Вьюсет тегов."""
 
     serializer_class = TagSerializer
@@ -63,7 +63,9 @@ class TagViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin):
     pagination_class = None
 
 
-class IngredientViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin):
+class IngredientViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin
+):
     """Вьюсет ингредиентов."""
 
     serializer_class = IngredientSerializer
