@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Sum
+from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, permissions
@@ -61,18 +62,21 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
         # GROUP BY recipes_recipe.date_added и из-за этого ингредиенты не
         # группируются по имени.
         cart = (
-            request.user.shoppingcart.recipe.prefetch_related(
+            request.user.shoppingcart.recipe.select_related(
                 'recipe_ingredients'
             )
             .values('ingredients__name', 'ingredients__measurement_unit__name')
             .annotate(sum=Sum('recipe_ingredients__amount'))
-            .order_by()
+            .order_by(Lower('ingredients__name'))
         )
         pdf_file = PDFFile()
         for ingredient in cart:
             pdf_file.add_item(
-                f"{ingredient['ingredients__name']}: {ingredient['sum']}, "
-                f"{ingredient['ingredients__measurement_unit__name']}"
+                [
+                    ingredient['ingredients__name'],
+                    ingredient['sum'],
+                    ingredient['ingredients__measurement_unit__name'],
+                ]
             )
         return HttpResponse(
             pdf_file.get_content(),

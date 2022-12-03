@@ -17,6 +17,7 @@ class UserAdmin(DjangoUserAdmin):
         'is_active',
         'date_joined',
     )
+    list_filter = ('username', 'email')
     fieldsets = (
         (None, {'fields': ('email', 'username')}),
         (

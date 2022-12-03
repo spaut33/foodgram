@@ -1,18 +1,26 @@
 from io import BytesIO
 
 from django.conf import settings
-from reportlab.lib import styles
+from reportlab.graphics.shapes import Rect, Drawing
+from reportlab.lib import styles, colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase.pdfmetrics import registerFontFamily, registerFont
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Frame,
+    Table,
+    TableStyle,
+)
 
 
 class PDFFile:
     """Класс PDF-файла из элементов"""
+
     # TODO: Сделать заголовок и футер как на сайте
 
     FONT_FAMILY = 'Montserrat'
@@ -24,7 +32,7 @@ class PDFFile:
     }
 
     def __init__(self):
-        self.title = 'Foodgram - Продуктовый помощник'
+        self.title = 'Продуктовый помощник'
         self.author = 'Roman Petrakov'
         self.subject = 'Список покупок'
         self.page_size = A4
@@ -32,12 +40,17 @@ class PDFFile:
         self.right_margin = 10 * mm
         self.top_margin = 10 * mm
         self.bottom_margin = 10 * mm
-        self.font_size = 14
         self.space_before = 12
-
+        self.footer_height = 30 * mm
+        self.body_fontsize = 12
+        self.header_fontsize = 16
+        self.footer_fontsize = 12
+        self.offset_multiplier = 2
+        self.leading_add = 1
+        # инициализация стилей reportlab и установка их в дефолтное значение
         self.styles = styles.getSampleStyleSheet()
         self.set_styles()
-
+        # регистрация фонтов
         self.font_path = settings.STATIC_ROOT / 'fonts'
         self.register_fonts()
 
@@ -45,6 +58,7 @@ class PDFFile:
         self.items = []
 
     def register_fonts(self):
+        """Загрузка и регистрация TTF фонтов"""
         for font_variant, font_file in self.FONT.items():
             registerFont(TTFont(font_variant, self.font_path / font_file))
 
@@ -57,14 +71,15 @@ class PDFFile:
         )
 
     def set_styles(self):
+        """Метод для задания стилей основной страницы и футера"""
         self.styles.add(
             ParagraphStyle(
                 name='regular',
                 fontName=f'{self.FONT_FAMILY}-Regular',
-                fontSize=self.font_size,
-                leading=self.font_size + 1,
+                fontSize=self.body_fontsize,
+                leading=self.body_fontsize + self.leading_add,
                 spaceBefore=self.space_before,
-                spaceAfter=self.space_before // 2,
+                spaceAfter=self.space_before // self.offset_multiplier,
                 alignment=TA_LEFT,
             )
         )
@@ -72,21 +87,38 @@ class PDFFile:
             ParagraphStyle(
                 name='footer',
                 fontName=f'{self.FONT_FAMILY}-Bold',
-                fontSize=self.font_size,
-                leading=self.font_size + 1,
+                fontSize=self.body_fontsize,
+                leading=self.body_fontsize + self.leading_add,
                 spaceBefore=self.space_before,
-                spaceAfter=self.space_before // 2,
+                spaceAfter=self.space_before // self.offset_multiplier,
                 alignment=TA_LEFT,
             )
         )
 
     @property
     def regular_style(self):
+        """Возвращает стиль основной страницы"""
         return self.styles['regular']
 
     @property
     def footer_style(self):
+        """Возвращает стиль футера"""
         return self.styles['footer']
+
+    @property
+    def table_style(self):
+        return TableStyle(
+            [
+                ('FONTNAME', (0, 0), (-1, -1), f'{self.FONT_FAMILY}-Regular'),
+                ('FONTSIZE', (0, 0), (-1, -1), self.body_fontsize),
+                (
+                    'LEADING',
+                    (0, 0),
+                    (-1, -1),
+                    self.body_fontsize + self.leading_add,
+                ),
+            ]
+        )
 
     def add_item(self, item):
         """Метод для добавления элементов файла"""
@@ -95,6 +127,44 @@ class PDFFile:
     def generate_body(self):
         """Метод для генерации текста из элементов"""
         return [Paragraph(item, self.regular_style) for item in self.items]
+
+    def generate_table(self):
+        """Метод для генерации таблицы из элементов"""
+        return [Table(self.items, style=self.table_style)]
+
+    def generate_footer(self, canvas, doc):
+        canvas.setFillColor(colors.black)
+        # Default: x=0, y=0, width=page width, height=footer height
+        canvas.rect(0, 0, self.page_size[0], self.footer_height, fill=True)
+        canvas.setFillColor(colors.white)
+        canvas.setFont('Montserrat-Bold', self.footer_fontsize)
+        canvas.drawString(
+            self.bottom_margin // self.offset_multiplier * mm,
+            self.bottom_margin // self.offset_multiplier * mm,
+            f'{self.title}',
+        )
+        canvas.drawString(
+            self.page_size[0]
+            - self.bottom_margin // self.offset_multiplier * mm,
+            self.bottom_margin // self.offset_multiplier * mm,
+            f'{doc.page}',
+        )
+
+    def template_first_page(self, canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Montserrat-Bold', self.header_fontsize)
+        canvas.drawCentredString(
+            self.page_size[0] // self.offset_multiplier,
+            self.page_size[1] - self.top_margin // self.offset_multiplier * mm,
+            'Список покупок',
+        )
+        self.generate_footer(canvas, doc)
+        canvas.restoreState()
+
+    def template_later_pages(self, canvas, doc):
+        canvas.saveState()
+        self.generate_footer(canvas, doc)
+        canvas.restoreState()
 
     def create(self):
         buffer = BytesIO()
@@ -105,11 +175,15 @@ class PDFFile:
             subject=self.subject,
             leftMargin=self.left_margin,
             rightMargin=self.right_margin,
-            topMargin=self.top_margin,
-            bottomMargin=self.bottom_margin,
+            topMargin=self.top_margin * self.offset_multiplier,
+            bottomMargin=self.footer_height + self.bottom_margin,
             pagesize=self.page_size,
         )
-        pdf_file.build(self.generate_body())
+        pdf_file.build(
+            self.generate_table(),
+            onFirstPage=self.template_first_page,
+            onLaterPages=self.template_later_pages,
+        )
         buffer.seek(0)
         pdf = buffer.getvalue()
         buffer.close()

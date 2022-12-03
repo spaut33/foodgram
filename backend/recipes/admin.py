@@ -8,6 +8,7 @@ from recipes.models import (
     Recipe,
     RecipeIngredient,
     Favorite,
+    ShoppingCart,
 )
 from users.models import Subscription
 
@@ -31,7 +32,7 @@ class UnitAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
-    list_filter = ('measurement_unit',)
+    list_filter = ('name',)
     list_editable = ('measurement_unit',)
 
 
@@ -42,9 +43,20 @@ class RecipeIngredientInLine(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'text', 'cooking_time', 'author', 'date_added')
+    list_display = (
+        'name',
+        'text',
+        'cooking_time',
+        'author',
+        'date_added',
+        'favorites_count',
+    )
     readonly_fields = ('date_added',)
+    list_filter = ('name', 'author', 'tags')
     inlines = (RecipeIngredientInLine,)
+
+    def favorites_count(self, obj):
+        return obj.favorites.count()
 
 
 @admin.register(Favorite)
@@ -53,6 +65,12 @@ class FavoritesAdmin(admin.ModelAdmin):
     list_filter = ('recipe', 'user')
     search_fields = ('recipe__name', 'user__username')
 
+
 @admin.register(Subscription)
 class SubscriptionsAdmin(admin.ModelAdmin):
     list_display = ('user', 'subscription')
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user')
