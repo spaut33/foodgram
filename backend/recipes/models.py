@@ -23,13 +23,13 @@ class Tag(models.Model):
     color = ColorField(
         format='hex',
         default='#FFFFFF',
-        verbose_name='Цвет',
+        verbose_name=_('Цвет'),
         null=False,
         unique=True,
     )
     slug = models.SlugField(
         max_length=settings.MAX_TAG_SLUG_LENGTH,
-        verbose_name='Имя для ссылки',
+        verbose_name=_('Имя для ссылки'),
         null=False,
         unique=True,
     )
@@ -65,7 +65,7 @@ class Unit(models.Model):
 class Ingredient(models.Model):
     """Модель ингредиента."""
 
-    MODEL_STRING = _('{name:.30}, {measurement_unit}')
+    MODEL_STRING = '{name:.30}, {measurement_unit}'
 
     name = models.CharField(
         max_length=settings.INGREDIENT_NAME_MAX_LENGTH,
@@ -85,7 +85,7 @@ class Ingredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['name', 'measurement_unit'],
-                name='Unique ingredient with unit',
+                name=_('Unique ingredient with unit'),
             )
         ]
         verbose_name = _('Ингредиент')
@@ -101,7 +101,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     """Модель рецепта."""
 
-    MODEL_STRING = _('{name:.50}')
+    MODEL_STRING = '{name:.50}'
 
     name = models.CharField(
         max_length=settings.RECIPE_NAME_MAX_LENGTH,
@@ -168,9 +168,18 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         db_index=True,
     )
-    amount = models.PositiveSmallIntegerField(verbose_name=_('Количество'))
+    amount = models.PositiveSmallIntegerField(
+        verbose_name=_('Количество'),
+        validators=[MinValueValidator(settings.INGREDIENT_MIN_VALUE)],
+    )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name=_('Unique ingredient for recipe'),
+            )
+        ]
         verbose_name = _('Ингредиенты рецепта')
         verbose_name_plural = verbose_name
 
@@ -185,7 +194,7 @@ class RecipeIngredient(models.Model):
 class Favorite(models.Model):
     """Модель избранных рецептов юзера"""
 
-    MODEL_STRING = 'Избранный рецепт {recipe:.30} юзера {user}'
+    MODEL_STRING = _('Избранный рецепт {recipe:.30} юзера {user}')
 
     recipe = models.ForeignKey(
         Recipe,

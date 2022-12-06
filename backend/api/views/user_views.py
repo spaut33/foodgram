@@ -51,6 +51,7 @@ class UserViewSet(DjoserUsers):
             status=status.HTTP_200_OK,
         )
 
+    # Методы принудительно отключены для соответствия ТЗ
     def reset_password(self, request, *args, **kwargs):
         return None
 
@@ -74,6 +75,8 @@ class UserViewSet(DjoserUsers):
 
 
 class SubscriptionViewSet(APIView):
+    """Подписка и отписка пользователей."""
+
     permission_classes = (permissions.IsAuthenticated,)
     model = Subscription
 
