@@ -17,7 +17,7 @@ User = get_user_model()
 
 MODEL_FIELDS = [
     [User, ['username', 'first_name', 'last_name', 'password']],
-    [Recipe, ['user_id', 'name', 'image', 'description', 'cooking_time']],
+    [Recipe, ['author_id', 'name', 'image', 'text', 'cooking_time']],
     [Ingredient, ['name', 'measurement_unit_id']],
     [Tag, ['name', 'slug', 'color']],
     [Unit, ['name']],
@@ -29,7 +29,7 @@ MODEL_FIELDS = [
 
 MODEL_M2M_FIELDS = [
     [Recipe, ['tags', 'ingredients']],
-    [ShoppingCart, ['recipes']],
+    [ShoppingCart, ['recipe']],
 ]
 
 
@@ -38,6 +38,12 @@ def search_field(fields, attname):
         if attname == field.attname:
             return field
     return None
+
+def find_verbose_name(fields):
+    for field in fields:
+        if field.verbose_name is not None:
+            return field
+        return None
 
 
 @pytest.mark.django_db
@@ -77,3 +83,15 @@ class TestModels:
         """Test model Favorite constraints"""
         with pytest.raises(IntegrityError):
             Favorite.objects.create(recipe=recipe, user=user)
+
+    @pytest.mark.parametrize(
+        argnames=['model_name', 'test_fields'], argvalues=MODEL_FIELDS
+    )
+    def test_fields_verbose_names(self, model_name, test_fields):
+        """Test all model fields has verbose names"""
+        model_fields = model_name._meta.fields
+        for test_field in test_fields:
+            field = search_field(model_fields, test_field)
+            assert (
+                    field is not None
+            ), f'Поле {test_field} не найдено в модели {model_name}'

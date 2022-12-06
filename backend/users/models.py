@@ -37,6 +37,9 @@ class User(AbstractUser):
         _('password'), max_length=settings.USER_PASSWORD_LENGTH
     )
 
+    class Meta:
+        ordering = ('-id',)
+
     @property
     def is_admin(self):
         return self.is_superuser or self.is_staff
@@ -49,13 +52,17 @@ class Subscription(models.Model):
     IS_CLEAR = False
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions'
+        User, on_delete=models.CASCADE, related_name='subscriptions',
+        verbose_name='Подписчик'
     )
     subscription = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='subscribers',
         verbose_name='Юзер, на кого подписываются',
+    )
+    date_added = models.DateTimeField(
+        verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True
     )
 
     class Meta:
@@ -65,6 +72,8 @@ class Subscription(models.Model):
                 name='Unique user subscription',
             )
         ]
+        verbose_name = _('Подписка')
+        verbose_name_plural = _('Подписки')
 
     def __str__(self):
         return self.MODEL_STRING.format(

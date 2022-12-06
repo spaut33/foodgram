@@ -32,3 +32,22 @@ class APITestBase:
         'ingredient_detail': '/api/ingredients/{ingredient_id}/'
 
     }
+
+    def assert_fields(self, fields_required, response, *args, **kwargs):
+        """Assertion to check fields in response"""
+        url = kwargs.get('url')
+        for field in fields_required:
+            assert field in response.json().keys(), (
+                f'При запросе на {url} должны возвращаться {fields_required} '
+                f'поля. В ответе не найдено поле {field}'
+            )
+        return response
+
+    def assert_status_code(self, code_expected, response, *args, **kwargs):
+        """Assertion to check status code in response"""
+        url = kwargs.get('url')
+        assert response.status_code == code_expected, (
+            f'При запросе `{url}` со всеми параметрами должен возвращаться '
+            f'код {code_expected} {response.json()}'
+        )
+        return response
