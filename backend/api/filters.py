@@ -10,8 +10,8 @@ class IngredientFilter(filters.FilterSet):
 
     name = django_filters.CharFilter(method='find_by_name')
     # TODO: нет поиска по вхождению. Добавить второй кверисет,
-    #  объединить результаты. issue #12
-    # https://stackoverflow.com/questions/18235419/how-to-chain-django-querysets-preserving-individual-order  # noqa
+    #       объединить результаты. issue #12
+    # https://stackoverflow.com/questions/18235419/how-to-chain-django-querysets-preserving-individual-order
 
     def find_by_name(self, queryset, name, value):
         if not value:
@@ -25,6 +25,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilterSet(filters.FilterSet):
+    """Фильтр рецептов"""
     is_favorited = filters.BooleanFilter(method='get_favorite_recipes')
     is_in_shopping_cart = filters.BooleanFilter(method='get_shopping_cart')
     tags = filters.Filter(method='filter_tags')
