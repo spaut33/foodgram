@@ -41,7 +41,7 @@ jobs:
 
     - name: Run tests and collect coverage
       run: |
-        pyton -m flake8
+        python -m flake8
         pytest -- cov .
 
     - name: Upload coverage to Codecov
