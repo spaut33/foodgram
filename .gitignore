@@ -133,3 +133,5 @@ dmypy.json
 
 /media
 /static
+/backend/media/recipes/
+/backend/static/fonts/
