@@ -37,6 +37,9 @@ class User(AbstractUser):
         _('password'), max_length=settings.USER_PASSWORD_LENGTH
     )
 
+    class Meta:
+        ordering = ('-id',)
+
     @property
     def is_admin(self):
         return self.is_superuser or self.is_staff

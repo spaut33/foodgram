@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',  # shell_plus --ipython
     'drf_yasg',
-    'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
     'djoser',
@@ -144,7 +143,7 @@ DJOSER = {
     'HIDE_USERS': False,
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],
-        'user': ['rest_framework.permissions.AllowAny'],
+        'user': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
         'user': 'api.serializers.user_serializers.UserSerializer',

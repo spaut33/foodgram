@@ -17,10 +17,21 @@ class Tag(models.Model):
         max_length=settings.TAG_MAX_LENGTH,
         verbose_name=_('Название'),
         db_index=True,
+        null=False,
+        unique=True,
     )
-    color = ColorField(format='hex', default='#FFFFFF')
+    color = ColorField(
+        format='hex',
+        default='#FFFFFF',
+        verbose_name='Цвет',
+        null=False,
+        unique=True,
+    )
     slug = models.SlugField(
-        unique=True, max_length=settings.MAX_TAG_SLUG_LENGTH
+        max_length=settings.MAX_TAG_SLUG_LENGTH,
+        verbose_name='Имя для ссылки',
+        null=False,
+        unique=True,
     )
 
     class Meta:
@@ -135,9 +146,7 @@ class Recipe(models.Model):
         ordering = ('-date_added',)
 
     def __str__(self):
-        return self.MODEL_STRING.format(
-            name=self.name
-        )
+        return self.MODEL_STRING.format(name=self.name)
 
 
 class RecipeIngredient(models.Model):

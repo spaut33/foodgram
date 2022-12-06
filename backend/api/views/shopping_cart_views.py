@@ -16,7 +16,8 @@ from recipes.models import ShoppingCart, Recipe
 class ShoppingCartViewSet(viewsets.GenericViewSet):
     """Вьюсет для списка покупок"""
 
-    serializers_class = RecipeSubscribeSerializer
+    serializer_class = RecipeSubscribeSerializer
+    queryset = ShoppingCart.objects.all()
 
     @action(
         methods=('post', 'delete'),
@@ -55,7 +56,7 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
     @action(
         methods=('get',),
         detail=False,
-        permission_classes=(permissions.AllowAny,),
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
         # Bug possibly? Без указания order_by() ORM добавляет принудительно

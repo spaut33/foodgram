@@ -54,11 +54,14 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
+        # Проверяет есть ли у юзера в подписках автор из
+        # сериализатора (запроса)
+        # Проверка на is_authenticated нужна, иначе для анонимов
+        # будет ошибка
         return (
             user.is_authenticated
-            and obj.subscriptions.filter(subscription=user).exists()
+            and user.subscriptions.filter(subscription=obj).exists()
         )
 
     class Meta(BaseUserSerializer.Meta):
         fields = BaseUserSerializer.Meta.fields + ('is_subscribed',)
-

@@ -12,6 +12,7 @@ from api.serializers.recipe_serializers import (
     TagSerializer,
     IngredientSerializer,
     RecipeSubscribeSerializer,
+    RecipeCreateUpdateSerializer,
 )
 from recipes.models import Ingredient, Recipe, Tag, Favorite
 
@@ -20,10 +21,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецептов."""
 
     serializer_class = RecipeSerializer
+    create_serializer_class = RecipeCreateUpdateSerializer
     subscribe_serializers_class = RecipeSubscribeSerializer
     queryset = Recipe.objects.select_related('author').all()
     pagination_class = LimitPagePagination
     filterset_class = RecipeFilterSet
+
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return self.serializer_class
+        return self.create_serializer_class
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        serializer = RecipeSerializer(
+            instance=serializer.instance, context={'request': self.request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         methods=('post', 'delete'),

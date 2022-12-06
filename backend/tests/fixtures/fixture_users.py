@@ -10,6 +10,13 @@ def user(django_user_model):
         password='123456Qq'
     )
 
+@pytest.fixture
+def another_user(django_user_model):
+    return django_user_model.objects.create_user(
+        username='another_test_user',
+        email='another.test.user@fake.mail',
+        password='123456Qq'
+    )
 
 @pytest.fixture
 def admin(django_user_model):
@@ -23,9 +30,9 @@ def admin(django_user_model):
 
 @pytest.fixture
 def token_admin(admin):
-    from rest_framework_simplejwt.tokens import AccessToken
+    from rest_framework.authtoken.models import Token
 
-    token = AccessToken.for_user(admin)
+    token = Token.objects.create(user_id=user.id)
     return {'access': str(token)}
 
 
@@ -40,9 +47,9 @@ def admin_client(token_admin):
 
 @pytest.fixture
 def token_user(user):
-    from rest_framework_simplejwt.tokens import AccessToken
+    from rest_framework.authtoken.models import Token
 
-    token = AccessToken.for_user(user)
+    token = Token.objects.create(user_id=user.id)
     return {'access': str(token)}
 
 
@@ -62,6 +69,7 @@ def user_client(token_user):
         pytest.param(3, id='3 users'),
     ]
 )
+
 def some_users(request):
     return [
         get_user_model().objects.create_user(
