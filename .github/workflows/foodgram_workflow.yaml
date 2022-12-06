@@ -41,6 +41,7 @@ jobs:
         pip install -r ./req.dev.txt
 
     - name: Run tests and collect coverage
+      run: |
         pyton -m flake8
         pytest -- cov .
 
