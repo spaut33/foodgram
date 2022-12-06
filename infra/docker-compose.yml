@@ -1,6 +1,11 @@
 version: '3.3'
 services:
-
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    env_file:
+      - ../backend/.env
   frontend:
     build:
       context: ../frontend
@@ -17,3 +22,5 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - ../backend/media/:/var/html/media/
       - ../backend/static/:/var/html/static/
+volumes:
+  db_data:
