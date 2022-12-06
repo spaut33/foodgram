@@ -40,7 +40,7 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
                     {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
                 )
             return Response(
-                self.serializers_class(recipe).data,
+                self.serializer_class(recipe).data,
                 status=status.HTTP_201_CREATED,
             )
         # Удаление рецепта из списка покупок
@@ -59,9 +59,11 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
-        # Bug possibly? Без указания order_by() ORM добавляет принудительно
-        # GROUP BY recipes_recipe.date_added и из-за этого ингредиенты не
-        # группируются по имени.
+        # Bug @ Django 3.2. Без указания order_by() ORM добавляет
+        # принудительно GROUP BY recipes_recipe.date_added и из-за этого
+        # ингредиенты не группируются по имени.
+        # https://code.djangoproject.com/ticket/14357
+        #
         cart = (
             request.user.shoppingcart.recipe.select_related(
                 'recipe_ingredients'
@@ -71,10 +73,11 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
             .order_by(Lower('ingredients__name'))
         )
         pdf_file = PDFFile()
+        # Добавляем ингредиенты в PDF, имена предварительно капитализируем
         for ingredient in cart:
             pdf_file.add_item(
                 [
-                    ingredient['ingredients__name'],
+                    ingredient['ingredients__name'].capitalize(),
                     ingredient['sum'],
                     ingredient['ingredients__measurement_unit__name'],
                 ]

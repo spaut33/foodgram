@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from users.validators import username_validator
 
 

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.validators import MinValueValidator
 from rest_framework import fields, serializers
 
 from api.fields import Base64ImageField
@@ -12,13 +14,35 @@ from recipes.models import (
 )
 
 
+class BaseIngredientSerializer(serializers.ModelSerializer):
+    """
+    Базовый сериализатор ингредиентов. Используется для форматирования имени
+    """
+
+    def validate_name(self, value):
+        return value.capitalize()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance=instance)
+        data['name'] = (
+            data['name'].capitalize() if data['name'] else data['name']
+        )
+        return data
+
+
 class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор тегов."""
+
     class Meta:
         model = Tag
         fields = '__all__'
 
 
-class IngredientSerializer(serializers.ModelSerializer):
+class IngredientSerializer(BaseIngredientSerializer):
+    """Сериализатор ингредиентов."""
+
+    # measurement_unit должен содержать имя из м2м модели, для корректного
+    # отображения
     measurement_unit = serializers.CharField(source='measurement_unit.name')
 
     class Meta:
@@ -26,11 +50,13 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RecipeIngredientsSerializer(serializers.ModelSerializer):
+class RecipeIngredientsSerializer(BaseIngredientSerializer):
+    """Сериализатор ингредиентов рецепта"""
+
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
     measurement_unit = serializers.CharField(
-        source='ingredient.measurement_unit'
+        source='ingredient.measurement_unit.name'
     )
 
     class Meta:
@@ -38,11 +64,17 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
-class RecipeIngredientCreateUpdateSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredient.id')
+class RecipeIngredientCreateSerializer(BaseIngredientSerializer):
+    """Сериализатор для создания ингредиентов рецепта"""
+
+    id = serializers.IntegerField(write_only=True)
+    amount = serializers.IntegerField(
+        write_only=True,
+        validators=[MinValueValidator(settings.INGREDIENT_MIN_VALUE)],
+    )
 
     class Meta:
-        model = RecipeIngredient
+        model = Ingredient
         fields = ('id', 'amount')
 
 
@@ -53,10 +85,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = fields.SerializerMethodField(default=False)
     is_in_shopping_cart = fields.SerializerMethodField(default=False)
     tags = TagSerializer(many=True)
-    author = user_serializers.UserSerializer()
+    author = user_serializers.UserSerializer(read_only=True)
     ingredients = RecipeIngredientsSerializer(
         source='recipe_ingredients', many=True
     )
+    cooking_time = serializers.IntegerField()
 
     class Meta:
         model = Recipe
@@ -93,17 +126,20 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeSubscribeSerializer(serializers.ModelSerializer):
+    """Укороченный сериализатор рецепта для отображения в подписках"""
+
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class RecipeCreateUpdateSerializer(RecipeSerializer):
+class RecipeCreateSerializer(RecipeSerializer):
+    """Сериализатор для создания рецепта"""
+
+    ingredients = RecipeIngredientCreateSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True
     )
-    ingredients = RecipeIngredientCreateUpdateSerializer(many=True)
-    image = Base64ImageField()
 
     class Meta(RecipeSerializer.Meta):
         fields = (
@@ -115,16 +151,15 @@ class RecipeCreateUpdateSerializer(RecipeSerializer):
             'cooking_time',
         )
 
-    def create(self, validated_data):
-        # TODO: Не понятно совсем, что с этим делать
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        # TODO: Не понятно совсем, что с этим делать
-        return super().update(instance, validated_data)
+    def to_representation(self, recipe):
+        return RecipeSerializer(
+            recipe, context={'request': self.context['request']}
+        ).data
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор списка избранных рецептов"""
+
     name = serializers.CharField(source='recipe.name')
     cooking_time = serializers.IntegerField(source='recipe.cooking_time')
     image = serializers.URLField(source='recipe.image.url')

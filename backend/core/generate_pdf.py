@@ -1,7 +1,6 @@
 from io import BytesIO
 
 from django.conf import settings
-from reportlab.graphics.shapes import Rect, Drawing
 from reportlab.lib import styles, colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -9,19 +8,11 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase.pdfmetrics import registerFontFamily, registerFont
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Frame,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
 
 
 class PDFFile:
     """Класс PDF-файла из элементов"""
-
-    # TODO: Сделать заголовок и футер как на сайте
 
     FONT_FAMILY = 'Montserrat'
     FONT = {
@@ -71,7 +62,7 @@ class PDFFile:
         )
 
     def set_styles(self):
-        """Метод для задания стилей основной страницы и футера"""
+        """Задание стилей"""
         self.styles.add(
             ParagraphStyle(
                 name='regular',
@@ -107,6 +98,7 @@ class PDFFile:
 
     @property
     def table_style(self):
+        """Возвращает стиль таблицы"""
         return TableStyle(
             [
                 ('FONTNAME', (0, 0), (-1, -1), f'{self.FONT_FAMILY}-Regular'),
@@ -133,6 +125,7 @@ class PDFFile:
         return [Table(self.items, style=self.table_style)]
 
     def generate_footer(self, canvas, doc):
+        """Генерирует футер для страниц"""
         canvas.setFillColor(colors.black)
         # Default: x=0, y=0, width=page width, height=footer height
         canvas.rect(0, 0, self.page_size[0], self.footer_height, fill=True)
@@ -151,6 +144,7 @@ class PDFFile:
         )
 
     def template_first_page(self, canvas, doc):
+        """Устанавливает шаблон первой страницы"""
         canvas.saveState()
         canvas.setFont('Montserrat-Bold', self.header_fontsize)
         canvas.drawCentredString(
@@ -162,11 +156,13 @@ class PDFFile:
         canvas.restoreState()
 
     def template_later_pages(self, canvas, doc):
+        """Устанавливает шаблон последующих страниц"""
         canvas.saveState()
         self.generate_footer(canvas, doc)
         canvas.restoreState()
 
     def create(self):
+        """Создание файла, заполнение шаблона"""
         buffer = BytesIO()
         pdf_file = SimpleDocTemplate(
             buffer,
@@ -179,6 +175,8 @@ class PDFFile:
             bottomMargin=self.footer_height + self.bottom_margin,
             pagesize=self.page_size,
         )
+        # Создание файла из таблицы, используя шаблоны первой и последующих
+        # страниц
         pdf_file.build(
             self.generate_table(),
             onFirstPage=self.template_first_page,
