@@ -1,14 +1,14 @@
 from io import BytesIO
 
 from django.conf import settings
-from reportlab.lib import styles, colors
+from reportlab.lib import colors, styles
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.pdfbase.pdfmetrics import registerFontFamily, registerFont
+from reportlab.pdfbase.pdfmetrics import registerFont, registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
 
 class PDFFile:
@@ -185,7 +185,7 @@ class PDFFile:
         buffer.seek(0)
         pdf = buffer.getvalue()
         buffer.close()
-        return pdf
+        return pdf  # noqa: R504
 
     def get_content(self):
         """Метод для сохранения файла"""

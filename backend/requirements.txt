@@ -1,0 +1,11 @@
+Django==3.2.16
+django_colorfield==0.7.2
+django-cors-headers==3.13.0
+django_filter==22.1
+djangorestframework==3.14.0
+django-extensions==3.2.1
+djoser==2.1.0
+drf_yasg==1.21.4
+psycopg2-binary==2.9.5
+python-dotenv==0.21.0
+reportlab==3.6.12

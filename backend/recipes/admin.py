@@ -1,15 +1,8 @@
-
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
-from recipes.models import (
-    Ingredient,
-    Tag,
-    Unit,
-    Recipe,
-    RecipeIngredient,
-    Favorite,
-    ShoppingCart,
-)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag, Unit)
 from users.models import Subscription
 
 
@@ -51,10 +44,11 @@ class RecipeAdmin(admin.ModelAdmin):
         'date_added',
         'favorites_count',
     )
-    readonly_fields = ('date_added',)
+    readonly_fields = ('date_added', 'favorites_count')
     list_filter = ('name', 'author', 'tags')
     inlines = (RecipeIngredientInLine,)
 
+    @admin.display(description=_('Добавлений в избранное'))
     def favorites_count(self, obj):
         return obj.favorites.count()
 
