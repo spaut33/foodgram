@@ -76,7 +76,7 @@ class TestUserAPI(APITestBase):
             'is_subscribed',
         ]
         response = self.assert_fields(
-            fields_required, user.client.get(url), url=url
+            fields_required, user_client.get(url), url=url
         )
         assert response.data == {
             'id': user.id,
