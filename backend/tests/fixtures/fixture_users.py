@@ -32,7 +32,7 @@ def admin(django_user_model):
 def token_admin(admin):
     from rest_framework.authtoken.models import Token
 
-    token = Token.objects.create(user_id=user.id)
+    token = Token.objects.create(user_id=admin.id)
     return {'access': str(token)}
 
 

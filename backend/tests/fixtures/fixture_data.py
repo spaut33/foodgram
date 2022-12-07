@@ -32,5 +32,10 @@ def tag():
 
 
 @pytest.fixture
+def unit():
+    return Unit.objects.create(name='test. unit')
+
+
+@pytest.fixture
 def subscription(user, another_user):
     return Subscription.objects.create(user=user, subscription=another_user)
