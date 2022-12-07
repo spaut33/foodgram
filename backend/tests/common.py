@@ -29,7 +29,8 @@ class APITestBase:
 
         # Ingredients
         'ingredient_list': '/api/ingredients/',
-        'ingredient_detail': '/api/ingredients/{ingredient_id}/'
+        # TODO: Uncomment this after workflows setup
+        # 'ingredient_detail': '/api/ingredients/{ingredient_id}/'
 
     }
 
