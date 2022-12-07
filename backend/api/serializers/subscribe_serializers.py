@@ -1,8 +1,8 @@
 from rest_framework.fields import SerializerMethodField
 
-from .recipe_serializers import RecipeSubscribeSerializer
-from .user_serializers import UserSerializer
 from api.pagination import LimitPagePagination
+from api.serializers.recipe_serializers import RecipeSubscribeSerializer
+from api.serializers.user_serializers import UserSerializer
 
 
 class SubscriptionSerializer(UserSerializer):

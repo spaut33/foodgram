@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -9,14 +10,12 @@ from rest_framework.response import Response
 from api.filters import IngredientFilter, RecipeFilterSet
 from api.pagination import LimitPagePagination
 from api.permissions import IsAdminAuthorOrReadOnly
-from api.serializers.recipe_serializers import (
-    RecipeSerializer,
-    TagSerializer,
-    IngredientSerializer,
-    RecipeSubscribeSerializer,
-    RecipeCreateSerializer,
-)
-from recipes.models import Ingredient, Recipe, Tag, Favorite, RecipeIngredient
+from api.serializers.recipe_serializers import (IngredientSerializer,
+                                                RecipeCreateSerializer,
+                                                RecipeSerializer,
+                                                RecipeSubscribeSerializer,
+                                                TagSerializer)
+from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
 
 
 class TagIngredientBaseViewSet(
@@ -56,7 +55,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             RecipeIngredient.objects.bulk_create(recipe_ingredients)
         except IntegrityError as error:
             raise ValidationError(
-                f'Ошибка при добавлении ингредиента: {error}'
+                _(f'Ошибка при добавлении ингредиента: {error}')
             )
 
     def perform_create(self, serializer):
@@ -84,6 +83,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, pk=kwargs.get('pk'))
+        # Добавление рецепта в избранное
         if request.method == 'POST':
             try:
                 Favorite.objects.create(user=request.user, recipe=recipe)
@@ -95,14 +95,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(
                     {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
                 )
-        else:
-            try:
-                Favorite.objects.get(user=request.user, recipe=recipe).delete()
-            except ObjectDoesNotExist as error:
-                return Response(
-                    {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
-                )
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        # Удаление рецепта из избранного
+        try:
+            Favorite.objects.get(user=request.user, recipe=recipe).delete()
+        except ObjectDoesNotExist as error:
+            return Response(
+                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(TagIngredientBaseViewSet):

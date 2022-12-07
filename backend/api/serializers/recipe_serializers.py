@@ -4,14 +4,8 @@ from rest_framework import fields, serializers
 
 from api.fields import Base64ImageField
 from api.serializers import user_serializers
-from recipes.models import (
-    Recipe,
-    Tag,
-    Ingredient,
-    RecipeIngredient,
-    Favorite,
-    ShoppingCart,
-)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 
 
 class BaseIngredientSerializer(serializers.ModelSerializer):
@@ -108,7 +102,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
-        # Проверка на is_authenticated нужна, иначе для анонимов
+        # Проверка на is_authenticated, иначе для анонимов
         # будет ошибка
         return (
             user.is_authenticated
@@ -117,7 +111,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        # Проверка на is_authenticated нужна, иначе для анонимов
+        # Проверка на is_authenticated, иначе для анонимов
         # будет ошибка
         return (
             user.is_authenticated

@@ -1,9 +1,10 @@
-from api.mixins import ValidateUsername
 from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
+
+from api.mixins import ValidateUsername
 
 User = get_user_model()
 

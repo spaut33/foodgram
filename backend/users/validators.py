@@ -11,7 +11,9 @@ def username_validator(value):
     forbidden_chars = ''.join(set(LEGAL_CHARACTERS.sub('', value)))
     if forbidden_chars:
         raise ValidationError(
-            _(f'Нельзя использовать символ(ы): {forbidden_chars} в имени '
-            f'пользователя.')
+            _(
+                f'Нельзя использовать символ(ы): {forbidden_chars} в имени '
+                f'пользователя.'
+            )
         )
     return value

@@ -134,3 +134,6 @@ dmypy.json
 /media
 /static
 /backend/media/recipes/
+shell.sh
+codecov
+req.dev.txt

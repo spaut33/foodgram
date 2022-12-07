@@ -4,13 +4,13 @@ from django.db.models import Sum
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, permissions
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.serializers.recipe_serializers import RecipeSubscribeSerializer
 from core.generate_pdf import PDFFile
-from recipes.models import ShoppingCart, Recipe
+from recipes.models import Recipe, ShoppingCart
 
 
 class ShoppingCartViewSet(viewsets.GenericViewSet):
@@ -44,14 +44,13 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_201_CREATED,
             )
         # Удаление рецепта из списка покупок
-        else:
-            try:
-                shopping_cart.recipe.remove(recipe)
-            except ObjectDoesNotExist as error:
-                return Response(
-                    {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
-                )
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            shopping_cart.recipe.remove(recipe)
+        except ObjectDoesNotExist as error:
+            return Response(
+                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=('get',),

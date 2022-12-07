@@ -27,5 +27,8 @@ class UserAdmin(DjangoUserAdmin):
                 'fields': ('first_name', 'last_name', 'date_joined'),
             },
         ),
-        (_('Управление'), {'fields': ('password', 'is_superuser', 'is_active')}),
+        (
+            _('Управление'),
+            {'fields': ('password', 'is_superuser', 'is_active')},
+        ),
     )

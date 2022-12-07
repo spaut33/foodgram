@@ -1,6 +1,5 @@
 import django_filters
 from django_filters import rest_framework as filters
-from django_filters.widgets import CSVWidget
 
 from recipes.models import Ingredient, Recipe
 
@@ -16,8 +15,7 @@ class IngredientFilter(filters.FilterSet):
     def find_by_name(self, queryset, name, value):
         if not value:
             return queryset
-        queryset_startswith = queryset.filter(name__istartswith=value)
-        return queryset_startswith
+        return queryset.filter(name__istartswith=value)
 
     class Meta:
         model = Ingredient
@@ -38,7 +36,7 @@ class RecipeFilterSet(filters.FilterSet):
         tags = self.request.query_params.getlist('tags', None)
         if tags:
             queryset = queryset.filter(tags__slug__in=tags).distinct()
-        return queryset
+        return queryset  # noqa: R504
 
     def get_favorite_recipes(self, queryset, name, value):
         """Фильтр рецептов, добавленных в избранное."""
@@ -48,10 +46,10 @@ class RecipeFilterSet(filters.FilterSet):
                     'recipe__pk', flat=True
                 )
             )
-        return queryset
+        return queryset  # noqa: R504
 
     def get_shopping_cart(self, queryset, name, value):
         """Фильтр рецептов, добавленных в список покупок."""
         if value:
             queryset = self.request.user.shoppingcart.recipe.all()
-        return queryset
+        return queryset  # noqa: R504
