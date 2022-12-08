@@ -1,8 +1,15 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag, Unit)
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+    Unit,
+)
 from users.models import Subscription
 
 
