@@ -236,6 +236,7 @@ class ShoppingCart(models.Model):
         related_name='shoppingcart',
         on_delete=models.CASCADE,
         db_index=True,
+        unique=True,
     )
     recipe = models.ManyToManyField(
         Recipe, related_name='shoppingcart_recipes', db_index=True

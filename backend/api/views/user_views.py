@@ -28,9 +28,6 @@ class UserViewSet(DjoserUsers):
     pagination_class = LimitPagePagination
     http_method_names = ('get', 'post', 'head')
 
-    def destroy(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
     @action(
         methods=('get',),
         detail=False,
@@ -52,26 +49,27 @@ class UserViewSet(DjoserUsers):
         )
 
     # Методы принудительно отключены для соответствия ТЗ
+    #
     def reset_password(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def activation(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def resend_activation(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def reset_username(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def set_username(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def reset_password_confirm(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def reset_username_confirm(self, request, *args, **kwargs):
-        return None
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class SubscriptionViewSet(APIView):

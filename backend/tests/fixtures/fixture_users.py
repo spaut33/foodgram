@@ -32,7 +32,7 @@ def admin(django_user_model):
 def token_admin(admin):
     from rest_framework.authtoken.models import Token
 
-    token = Token.objects.create(user_id=user.id)
+    token = Token.objects.create(user_id=admin.id)
     return {'access': str(token)}
 
 
@@ -64,9 +64,9 @@ def user_client(token_user):
 
 @pytest.fixture(
     params=[
-        pytest.param(1, id='1 user'),
-        pytest.param(2, id='2 users'),
-        pytest.param(3, id='3 users'),
+        pytest.param(1, id='user 1'),
+        pytest.param(2, id='user 2'),
+        pytest.param(3, id='user 3'),
     ]
 )
 
@@ -76,7 +76,6 @@ def some_users(request):
             username=f'test_user_{i}',
             email=f'test.user{i}@fake.mail',
             password='123456Qq',
-            role='user',
         )
         for i in range(request.param)
     ]
