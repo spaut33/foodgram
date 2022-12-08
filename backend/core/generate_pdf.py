@@ -1,6 +1,7 @@
 from io import BytesIO
 
 from django.conf import settings
+
 from reportlab.lib import colors, styles
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
