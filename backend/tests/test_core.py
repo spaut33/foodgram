@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from core.management.commands.load_ingredients import Command
 from django.core.management.base import CommandError
 
@@ -27,9 +28,7 @@ def test_wrong_path(mocker):
 @pytest.mark.django_db(transaction=True)
 def test_corrupted_file(mocker):
     """Отсутствующий или неверный путь к файлу выбрасывает исключение"""
-    mocked_json_file = mocker.mock_open(
-        read_data='not a json at all {{}}',
-    )
+    mocked_json_file = mocker.mock_open(read_data='not a json at all {{}}')
     mocker.patch('builtins.open', mocked_json_file)
     with pytest.raises(ValueError) as e:
         Command().handle()
@@ -60,3 +59,17 @@ def test_empty_json(mocker, capfd):
         'Найдено 0 ингредиентов. Из них новых '
         '0 добавлено в базу данных.'
     ), 'Ошибка при обработке пустого json-файла'
+
+
+@pytest.mark.django_db(transaction=True)
+def test_not_created_item(mocker, capfd):
+    """Тест ошибки при добавлении итемов в базу данных"""
+    mocker.patch(
+        'django.db.models.query.QuerySet.bulk_create',
+        side_effect=Exception('mocked error'),
+    )
+    Command().handle()
+    out, err = capfd.readouterr()
+    assert out.strip() == (
+        f'Ошибка во время заполнения базы данных значениями mocked error'
+    )

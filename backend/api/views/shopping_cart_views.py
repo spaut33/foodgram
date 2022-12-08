@@ -1,9 +1,9 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Sum
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -28,11 +28,16 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
         """Метод обрабатывает список покупок"""
         recipe = get_object_or_404(Recipe, pk=pk)
         # Получаем или создаем список покупок для данного юзера
-        shopping_cart, _ = ShoppingCart.objects.get_or_create(
+        shopping_cart, create_flag = ShoppingCart.objects.get_or_create(
             user=request.user
         )
         if request.method == 'POST':
             # Добавляем рецепт в созданный (или полученный) список покупок
+            if shopping_cart.recipe.filter(id=recipe.id).exists():
+                return Response(
+                    {'errors': _('Рецепт уже в списке покупок')},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             try:
                 shopping_cart.recipe.add(recipe)
             except IntegrityError as error:
@@ -44,12 +49,12 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_201_CREATED,
             )
         # Удаление рецепта из списка покупок
-        try:
-            shopping_cart.recipe.remove(recipe)
-        except ObjectDoesNotExist as error:
+        if not shopping_cart.recipe.filter(id=recipe.id).exists():
             return Response(
-                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
+                {'errors': _('Рецепта нет в списке покупок')},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        shopping_cart.recipe.remove(recipe)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -63,14 +68,22 @@ class ShoppingCartViewSet(viewsets.GenericViewSet):
         # ингредиенты не группируются по имени.
         # https://code.djangoproject.com/ticket/14357
         #
-        cart = (
-            request.user.shoppingcart.recipe.select_related(
-                'recipe_ingredients'
+        try:
+            cart = (
+                request.user.shoppingcart.recipe.select_related(
+                    'recipe_ingredients'
+                )
+                .values(
+                    'ingredients__name', 'ingredients__measurement_unit__name'
+                )
+                .annotate(sum=Sum('recipe_ingredients__amount'))
+                .order_by(Lower('ingredients__name'))
             )
-            .values('ingredients__name', 'ingredients__measurement_unit__name')
-            .annotate(sum=Sum('recipe_ingredients__amount'))
-            .order_by(Lower('ingredients__name'))
-        )
+        except Exception as error:
+            return Response(
+                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         pdf_file = PDFFile()
         # Добавляем ингредиенты в PDF, имена предварительно капитализируем
         for ingredient in cart:
