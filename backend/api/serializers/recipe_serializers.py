@@ -48,6 +48,7 @@ class IngredientSerializer(BaseIngredientSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
+        order_by = ('-name',)
 
 
 class RecipeIngredientsSerializer(BaseIngredientSerializer):
