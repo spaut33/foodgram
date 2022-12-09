@@ -127,16 +127,16 @@ class TestModels:
             str(unit_with_long_name) == 'u' * 15
         ), 'Имя модели Unit должно содержать 15 символов'
 
-    def test_model_ingredient_str(self, unit):
+    def test_model_ingredient_str(self, measurement_unit):
         """Тест метода __str__ для модели Ingredient"""
         # Для ингредиентов делаем первую букву большой и возвращаем вместе
         # с ед. изм.
         ingredient_with_long_name = Ingredient.objects.create(
-            name='a' * 100, measurement_unit=unit
+            name='a' * 100, measurement_unit=measurement_unit
         )
         assert str(ingredient_with_long_name) == (
             'a' * 30
-        ).capitalize() + ', ' + str(unit), (
+        ).capitalize() + ', ' + str(measurement_unit), (
             'Имя модели Ingredient должно содержать не более 30 символов имени '
             'ингредиента и не более 15 символов единицы измерения'
         )

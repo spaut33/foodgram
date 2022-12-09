@@ -12,6 +12,20 @@ from users.models import Subscription
 
 
 @pytest.fixture
+def tag():
+    return Tag.objects.create(
+        name='test-tag', slug='test-tag', color='#fff000'
+    )
+
+
+@pytest.fixture
+def tag2():
+    return Tag.objects.create(
+        name='test-tag-2', slug='test-tag-2', color='#000aaa'
+    )
+
+
+@pytest.fixture
 def measurement_unit():
     return Unit.objects.create(name='m.unit')
 
@@ -38,10 +52,14 @@ def ingredient3(measurement_unit):
 
 
 @pytest.fixture
-def recipe(user, ingredient):
-    return Recipe.objects.create(
+def recipe(user, ingredient, tag):
+
+    recipe = Recipe.objects.create(
         name='Delicious Fried Test Chicken', author=user, cooking_time=10
     )
+
+    recipe.tags.add(tag)
+    return recipe
 
 
 @pytest.fixture
@@ -65,15 +83,14 @@ def shopping_cart(user, recipe_with_ingredients):
 
 
 @pytest.fixture
-def tag():
-    return Tag.objects.create(name='test-tag')
-
-
-@pytest.fixture
-def unit():
-    return Unit.objects.create(name='test. unit')
-
-
-@pytest.fixture
 def subscription(user, another_user):
     return Subscription.objects.create(user=user, subscription=another_user)
+
+
+@pytest.fixture
+def image_str():
+    return (
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYA'
+        'AAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg'
+        '=='
+    )
