@@ -29,8 +29,7 @@ class TagIngredientBaseViewSet(
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """Вьюсет рецептов."""
-
+    """Вьюсет для рецептов"""
     serializer_class = RecipeSerializer
     create_serializer_class = RecipeCreateSerializer
     subscribe_serializers_class = RecipeSubscribeSerializer
@@ -40,21 +39,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminAuthorOrReadOnly,)
 
     def get_serializer_class(self):
+        """Возвращает нужный сериализатор в зависимости от http-метода"""
         if self.request.method in permissions.SAFE_METHODS:
             return self.serializer_class
         return self.create_serializer_class
 
     def create_ingredients(self, instance, ingredients):
-        recipe_ingredients = (
-            RecipeIngredient(
+        """Создает ингредиенты для рецепта"""
+        try:
+            RecipeIngredient.objects.bulk_create(RecipeIngredient(
                 recipe=instance,
                 ingredient=get_object_or_404(Ingredient, id=ingredient['id']),
                 amount=ingredient['amount'],
             )
             for ingredient in ingredients
         )
-        try:
-            RecipeIngredient.objects.bulk_create(recipe_ingredients)
         except IntegrityError as error:
             raise ValidationError(
                 _(f'Ошибка при добавлении ингредиента: {error}')
@@ -84,6 +83,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, *args, **kwargs):
+        """Добавляет/удаляет рецепт в избранное"""
         recipe = get_object_or_404(Recipe, pk=kwargs.get('pk'))
         # Добавление рецепта в избранное
         if request.method == 'POST':

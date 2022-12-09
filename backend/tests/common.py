@@ -12,7 +12,7 @@ class APITestBase:
         'tag_detail': '/api/tags/{tag_id}/',
         # Recipes
         'recipe_list': '/api/recipes/',
-        'recipe_detail': '/api/recipes/{recipe_id}',
+        'recipe_detail': '/api/recipes/{recipe_id}/',
         # Shopping cart
         'shopping_cart': '/api/recipes/download_shopping_cart/',
         'recipe_in_cart': '/api/recipes/{recipe_id}/shopping_cart/',
@@ -29,8 +29,12 @@ class APITestBase:
     def assert_fields(self, fields_required, response, *args, **kwargs):
         """Assertion to check fields in response"""
         url = kwargs.get('url')
+        if isinstance(response, list):
+            response_data = response[0].keys()
+        else:
+            response_data = response.json().keys()
         for field in fields_required:
-            assert field in response.json().keys(), (
+            assert field in response_data, (
                 f'При запросе на `{url}` должны возвращаться '
                 f'{fields_required} поля. В ответе не найдено поле {field}'
             )
