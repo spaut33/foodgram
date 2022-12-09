@@ -30,6 +30,7 @@ class TagIngredientBaseViewSet(
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для рецептов"""
+
     serializer_class = RecipeSerializer
     create_serializer_class = RecipeCreateSerializer
     subscribe_serializers_class = RecipeSubscribeSerializer
@@ -47,13 +48,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def create_ingredients(self, instance, ingredients):
         """Создает ингредиенты для рецепта"""
         try:
-            RecipeIngredient.objects.bulk_create(RecipeIngredient(
-                recipe=instance,
-                ingredient=get_object_or_404(Ingredient, id=ingredient['id']),
-                amount=ingredient['amount'],
+            RecipeIngredient.objects.bulk_create(
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient=get_object_or_404(
+                        Ingredient, id=ingredient['id']
+                    ),
+                    amount=ingredient['amount'],
+                )
+                for ingredient in ingredients
             )
-            for ingredient in ingredients
-        )
         except IntegrityError as error:
             raise ValidationError(
                 _(f'Ошибка при добавлении ингредиента: {error}')
