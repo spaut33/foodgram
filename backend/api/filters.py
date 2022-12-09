@@ -16,14 +16,17 @@ class IngredientFilter(filters.FilterSet):
         if not value:
             return queryset
         # Сначала ищем совпадения по началу слова, аннотируем значением
-        # qs_order=1
+        # qs_order=0
         starts_with = queryset.filter(name__istartswith=value).annotate(
-            qs_order=models.Value(1, models.IntegerField())
+            qs_order=models.Value(0, models.IntegerField())
         )
-        # Затем ищем совпадения по любому слову, аннотируем значением
-        # qs_order=2
-        contains = queryset.filter(name__icontains=value).annotate(
-            qs_order=models.Value(2, models.IntegerField())
+        # Затем ищем совпадения по любому слову, выкидываем из них совпадения
+        # по началу слова (они у нас уже есть) аннотируем значением
+        # qs_order=1
+        contains = (
+            queryset.filter(name__icontains=value)
+            .exclude(name__istartswith=value)
+            .annotate(qs_order=models.Value(1, models.IntegerField()))
         )
         # Объединяем результаты, сортируя по qs_order
         return starts_with.union(contains).order_by('qs_order')
