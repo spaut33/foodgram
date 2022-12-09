@@ -1,3 +1,4 @@
+from django.db import models
 import django_filters
 from django_filters import rest_framework as filters
 
@@ -8,14 +9,24 @@ class IngredientFilter(filters.FilterSet):
     """Фильтр поиска ингредиента."""
 
     name = django_filters.CharFilter(method='find_by_name')
-    # TODO: нет поиска по вхождению. Добавить второй кверисет,
-    #       объединить результаты. issue #12
+    # issue #12
     # https://stackoverflow.com/questions/18235419/how-to-chain-django-querysets-preserving-individual-order
 
     def find_by_name(self, queryset, name, value):
         if not value:
             return queryset
-        return queryset.filter(name__istartswith=value)
+        # Сначала ищем совпадения по началу слова, аннотируем значением
+        # qs_order=1
+        starts_with = queryset.filter(name__istartswith=value).annotate(
+            qs_order=models.Value(1, models.IntegerField())
+        )
+        # Затем ищем совпадения по любому слову, аннотируем значением
+        # qs_order=2
+        contains = queryset.filter(name__icontains=value).annotate(
+            qs_order=models.Value(2, models.IntegerField())
+        )
+        # Объединяем результаты, сортируя по qs_order
+        return starts_with.union(contains).order_by('qs_order')
 
     class Meta:
         model = Ingredient
@@ -24,6 +35,7 @@ class IngredientFilter(filters.FilterSet):
 
 class RecipeFilterSet(filters.FilterSet):
     """Фильтр рецептов"""
+
     is_favorited = filters.BooleanFilter(method='get_favorite_recipes')
     is_in_shopping_cart = filters.BooleanFilter(method='get_shopping_cart')
     tags = filters.Filter(method='filter_tags')
