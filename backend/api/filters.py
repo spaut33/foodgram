@@ -9,8 +9,7 @@ class IngredientFilter(filters.FilterSet):
     """Фильтр поиска ингредиента."""
 
     name = django_filters.CharFilter(method='find_by_name')
-    # issue #12
-    # https://stackoverflow.com/questions/18235419/how-to-chain-django-querysets-preserving-individual-order
+    # Фильтр по имени ингредиента
 
     def find_by_name(self, queryset, name, value):
         if not value:
@@ -23,9 +22,10 @@ class IngredientFilter(filters.FilterSet):
         # Затем ищем совпадения по любому слову, выкидываем из них совпадения
         # по началу слова (они у нас уже есть) аннотируем значением
         # qs_order=1
+
         contains = (
             queryset.filter(name__icontains=value)
-            .exclude(name__istartswith=value)
+            .exclude(name__in=starts_with.values('name'))
             .annotate(qs_order=models.Value(1, models.IntegerField()))
         )
         # Объединяем результаты, сортируя по qs_order

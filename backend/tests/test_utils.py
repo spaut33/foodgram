@@ -20,7 +20,7 @@ class TestUtils(APITestBase):
         self.assert_status_code(200, client.get(url), url=url)
         assert len(response.data) == 2
         # name startswith
-        url = self.urls['ingredient_list'] + '?name=Secret+ingredient'
+        url = self.urls['ingredient_list'] + '?name=Secret'
         response = client.get(url)
         self.assert_status_code(200, client.get(url), url=url)
         assert len(response.data) == 2
