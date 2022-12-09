@@ -14,10 +14,16 @@ class TestUtils(APITestBase):
     @pytest.mark.django_db
     def test_ingredient_filter_by_name(self, client, ingredient, ingredient2):
         """Test that ingredient filter by name works correctly"""
-        url = self.urls['ingredient_list'] + '?name=Secret+ingredient+1'
+        # name contains
+        url = self.urls['ingredient_list'] + '?name=ingredient'
         response = client.get(url)
         self.assert_status_code(200, client.get(url), url=url)
-        assert len(response.data) == 1
+        assert len(response.data) == 2
+        # name startswith
+        url = self.urls['ingredient_list'] + '?name=Secret+ingredient'
+        response = client.get(url)
+        self.assert_status_code(200, client.get(url), url=url)
+        assert len(response.data) == 2
         assert response.data[0]['name'] == 'Secret ingredient 1'
         # Test with empty name, should return all ingredients
         url = self.urls['ingredient_list'] + '?name='
