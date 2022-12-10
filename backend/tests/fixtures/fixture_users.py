@@ -11,6 +11,15 @@ def user(django_user_model):
     )
 
 @pytest.fixture
+def blocked_user(django_user_model):
+    return django_user_model.objects.create_user(
+        username='test_user',
+        email='test.user@fake.mail',
+        password='123456Qq',
+        is_active=False
+    )
+
+@pytest.fixture
 def another_user(django_user_model):
     return django_user_model.objects.create_user(
         username='another_test_user',
@@ -59,6 +68,13 @@ def user_client(token_user):
 
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Token {token_user["access"]}')
+    return client
+
+@pytest.fixture
+def blocked_client(blocked_user):
+    from rest_framework.test import APIClient
+
+    client = APIClient()
     return client
 
 

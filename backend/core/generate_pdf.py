@@ -43,7 +43,7 @@ class PDFFile:
         self.styles = styles.getSampleStyleSheet()
         self.set_styles()
         # регистрация фонтов
-        self.font_path = settings.STATIC_ROOT / 'fonts'
+        self.font_path = settings.BASE_DIR / 'core' / 'static' / 'fonts'
         self.register_fonts()
 
         self.pdf_file = None

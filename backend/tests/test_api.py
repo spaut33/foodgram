@@ -11,7 +11,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db(transaction=True)
-class TestUserAPI(APITestBase):
+class TestAPI(APITestBase):
     def test_urls_anonymous_user(self, client, user, tag, recipe, ingredient):
         """Test urls available for any users"""
         for url in self.urls.values():
