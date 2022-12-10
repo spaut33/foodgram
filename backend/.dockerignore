@@ -1,0 +1,8 @@
+.venv/
+setup.cfg
+__pycache__/
+htmlcov/
+.coverage
+.coveragerc
+codecov
+coverage.xml
