@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from djoser.views import UserViewSet as DjoserUsers
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -9,17 +10,10 @@ from rest_framework.views import APIView
 
 from api.pagination import LimitPagePagination
 from api.serializers.subscribe_serializers import SubscriptionSerializer
+from api.utils import get_subscription_serializer
 from users.models import Subscription
 
 User = get_user_model()
-
-
-def get_subscription_serializer(*args, **kwargs):
-    return SubscriptionSerializer(
-        kwargs.get('queryset'),
-        context={'request': kwargs.get('request')},
-        many=True,
-    ).data
 
 
 class UserViewSet(DjoserUsers):
@@ -99,6 +93,13 @@ class SubscriptionViewSet(APIView):
     def delete(self, request, *args, **kwargs):
         """Отписка от пользователя."""
         subscription = get_object_or_404(User, pk=kwargs.get('id'))
+        if not Subscription.objects.filter(
+            user=request.user, subscription=subscription
+        ).exists():
+            return Response(
+                {'errors': _('Подписка не найдена')},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             self.model.objects.get(
                 user=request.user, subscription=subscription

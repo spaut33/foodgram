@@ -230,21 +230,29 @@ class Favorite(models.Model):
 class ShoppingCart(models.Model):
     """Модель список покупок пользователя"""
 
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         User,
         related_name='shoppingcart',
         on_delete=models.CASCADE,
         db_index=True,
-        unique=True,
     )
-    recipe = models.ManyToManyField(
-        Recipe, related_name='shoppingcart_recipes', db_index=True
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='shoppingcart',
+        on_delete=models.CASCADE,
+        db_index=True,
     )
     date_added = models.DateTimeField(
         verbose_name=_('Дата добавления'), auto_now_add=True, db_index=True
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='Unique recipe in shopping cart for user',
+            )
+        ]
         verbose_name = _('Список покупок')
         verbose_name_plural = _('Списки покупок')
 

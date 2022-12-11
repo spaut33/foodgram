@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from rest_framework import fields, serializers
+from rest_framework.exceptions import ValidationError
 
 from api.fields import Base64ImageField
 from api.serializers import user_serializers
@@ -151,6 +155,43 @@ class RecipeCreateSerializer(RecipeSerializer):
             'text',
             'cooking_time',
         )
+
+    def create_ingredients(self, recipe, ingredients):
+        """Создает ингредиенты для рецепта"""
+        try:
+            RecipeIngredient.objects.bulk_create(
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=get_object_or_404(
+                        Ingredient, id=ingredient['id']
+                    ),
+                    amount=ingredient['amount'],
+                )
+                for ingredient in ingredients
+            )
+        except IntegrityError as error:
+            raise ValidationError(
+                _(f'Ошибка при добавлении ингредиента: {error}')
+            )
+
+    def create(self, validated_data):
+        author = self.context.get('request').user
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(author=author, **validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, ingredients)
+        return recipe
+
+    def update(self, recipe, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        super().update(recipe, validated_data)
+        recipe.ingredients.clear()
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, ingredients)
+        recipe.save()
+        return recipe
 
     def to_representation(self, recipe):
         return RecipeSerializer(

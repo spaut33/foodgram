@@ -1,13 +1,8 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext_lazy as _
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilterSet
+from api.mixins import FavoriteShoppingCartMixin
 from api.pagination import LimitPagePagination
 from api.permissions import IsAdminAuthorOrReadOnly
 from api.serializers.recipe_serializers import (
@@ -17,7 +12,7 @@ from api.serializers.recipe_serializers import (
     RecipeSubscribeSerializer,
     TagSerializer,
 )
-from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 
 
 class TagIngredientBaseViewSet(
@@ -28,7 +23,7 @@ class TagIngredientBaseViewSet(
     pagination_class = None
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet, FavoriteShoppingCartMixin):
     """Вьюсет для рецептов"""
 
     serializer_class = RecipeSerializer
@@ -45,70 +40,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return self.serializer_class
         return self.create_serializer_class
 
-    def create_ingredients(self, instance, ingredients):
-        """Создает ингредиенты для рецепта"""
-        try:
-            RecipeIngredient.objects.bulk_create(
-                RecipeIngredient(
-                    recipe=instance,
-                    ingredient=get_object_or_404(
-                        Ingredient, id=ingredient['id']
-                    ),
-                    amount=ingredient['amount'],
-                )
-                for ingredient in ingredients
-            )
-        except IntegrityError as error:
-            raise ValidationError(
-                _(f'Ошибка при добавлении ингредиента: {error}')
-            )
-
-    def perform_create(self, serializer):
-        ingredients = serializer.validated_data.pop('ingredients')
-        tags = serializer.validated_data.pop('tags')
-        recipe = serializer.save(
-            **serializer.validated_data, author=self.request.user
-        )
-        recipe.tags.set(tags)
-        self.create_ingredients(recipe, ingredients)
-
-    def perform_update(self, serializer):
-        data = serializer.validated_data
-        ingredients = data.pop('ingredients')
-        tags = serializer.validated_data.pop('tags')
-        instance = serializer.save()
-        instance.ingredients.clear()
-        instance.tags.set(tags)
-        self.create_ingredients(instance, ingredients)
-
     @action(
         methods=('post', 'delete'),
         detail=True,
         permission_classes=(permissions.IsAuthenticated,),
     )
-    def favorite(self, request, *args, **kwargs):
-        """Добавляет/удаляет рецепт в избранное"""
-        recipe = get_object_or_404(Recipe, pk=kwargs.get('pk'))
+    def favorite(self, request, pk=None):
         # Добавление рецепта в избранное
         if request.method == 'POST':
-            try:
-                Favorite.objects.create(user=request.user, recipe=recipe)
-                return Response(
-                    self.subscribe_serializers_class(recipe).data,
-                    status=status.HTTP_201_CREATED,
-                )
-            except IntegrityError as error:
-                return Response(
-                    {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
-                )
+            return self.add_recipe(request, pk=pk, model=Favorite)
         # Удаление рецепта из избранного
-        try:
-            Favorite.objects.get(user=request.user, recipe=recipe).delete()
-        except ObjectDoesNotExist as error:
-            return Response(
-                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return self.delete_recipe(request, pk=pk, model=Favorite)
 
 
 class TagViewSet(TagIngredientBaseViewSet):

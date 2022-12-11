@@ -30,7 +30,6 @@ MODEL_FIELDS = [
 
 MODEL_M2M_FIELDS = [
     [Recipe, ['tags', 'ingredients']],
-    [ShoppingCart, ['recipe']],
 ]
 
 
@@ -143,7 +142,7 @@ class TestModels:
 
     def test_model_shoppingcart_str(self, user, recipe):
         """Тест метода __str__ для модели ShoppingCart"""
-        shoppingcart = ShoppingCart.objects.create(user=user)
+        shoppingcart = ShoppingCart.objects.create(user=user, recipe=recipe)
         assert str(shoppingcart) == f'Список покупок пользователя {user}'
 
     def test_model_favorite_str(self, user, recipe):

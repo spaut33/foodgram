@@ -123,6 +123,8 @@ class PDFFile:
 
     def generate_table(self):
         """Метод для генерации таблицы из элементов"""
+        if not self.items:
+            return None
         return [Table(self.items, style=self.table_style)]
 
     def generate_footer(self, canvas, doc):
@@ -178,6 +180,8 @@ class PDFFile:
         )
         # Создание файла из таблицы, используя шаблоны первой и последующих
         # страниц
+        if self.generate_table() is None:
+            return None
         pdf_file.build(
             self.generate_table(),
             onFirstPage=self.template_first_page,
