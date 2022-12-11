@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.response import Response
 
-
 from recipes.models import Recipe
 from users.validators import username_validator
 

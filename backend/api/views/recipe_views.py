@@ -12,7 +12,7 @@ from api.serializers.recipe_serializers import (
     RecipeSubscribeSerializer,
     TagSerializer,
 )
-from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 
 
 class TagIngredientBaseViewSet(
