@@ -66,5 +66,9 @@ class RecipeFilterSet(filters.FilterSet):
     def get_shopping_cart(self, queryset, name, value):
         """Фильтр рецептов, добавленных в список покупок."""
         if value:
-            queryset = self.request.user.shoppingcart.recipe.all()
+            queryset = self.queryset.filter(
+                id__in=self.request.user.shoppingcart.all().values_list(
+                    'recipe__pk', flat=True
+                )
+            )
         return queryset  # noqa: R504

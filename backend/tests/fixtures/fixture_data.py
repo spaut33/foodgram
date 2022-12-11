@@ -77,8 +77,9 @@ def favorite(user, recipe):
 
 @pytest.fixture
 def shopping_cart(user, recipe_with_ingredients):
-    shopping_cart = ShoppingCart.objects.create(user=user)
-    shopping_cart.recipe.add(recipe_with_ingredients)
+    shopping_cart = ShoppingCart.objects.create(
+        user=user, recipe=recipe_with_ingredients
+    )
     return shopping_cart
 
 
