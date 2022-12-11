@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from djoser.views import UserViewSet as DjoserUsers
@@ -100,12 +100,7 @@ class SubscriptionViewSet(APIView):
                 {'errors': _('Подписка не найдена')},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            self.model.objects.get(
-                user=request.user, subscription=subscription
-            ).delete()
-        except ObjectDoesNotExist as error:
-            return Response(
-                {'errors': str(error)}, status=status.HTTP_400_BAD_REQUEST
-            )
+        self.model.objects.get(
+            user=request.user, subscription=subscription
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
