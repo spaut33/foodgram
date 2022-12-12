@@ -131,9 +131,14 @@ UNIT_NAME_MAX_LENGTH = 200
 TAG_MAX_LENGTH = 200
 MAX_TAG_SLUG_LENGTH = 200
 
-CORS_ORIGIN_ALLOW_ALL = True
+if DEBUG:
+    CORS_ORIGIN_ALLOW_ALL = True
+else:
+    CORS_ORIGIN_ALLOW_ALL = False
 CORS_URLS_REGEX = r'^/api/.*$'
-CORS_ORIGIN_WHITELIST = os.environ.get('CORS_WHITELIST').split()
+CORS_ORIGIN_WHITELIST = os.environ.get(
+    'CORS_WHITELIST', default='http://localhost'
+).split()
 
 # Djoser
 DJOSER = {
@@ -154,10 +159,6 @@ DJOSER = {
 # Swagger auth settings
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
-        'api_key': {
-            'name': 'Authorization',
-            'type': 'apiKey',
-            'in': 'header',
-        }
-    },
+        'api_key': {'name': 'Authorization', 'type': 'apiKey', 'in': 'header'}
+    }
 }
