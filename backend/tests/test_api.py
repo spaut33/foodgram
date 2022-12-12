@@ -425,6 +425,119 @@ class TestAPI(APITestBase):
             == recipe_data['name']
         ), 'Неверное имя рецепта в базе данных'
 
+    def test_create_recipe_without_ingredients(
+        self, user_client, image_str, recipe_with_ingredients
+    ):
+        """Test recipe create without ingredients"""
+        url = self.urls['recipe_list']
+        recipe_data = {
+            'name': 'test_recipe',
+            'text': 'test_text',
+            'cooking_time': 100,
+            'image': image_str,
+        }
+        self.assert_status_code(
+            400, user_client.post(url, recipe_data, format='json'), url=url
+        ), 'Рецепт без ингредиентов должен быть невалидным'
+        url = self.urls['recipe_detail'].format(
+            recipe_id=recipe_with_ingredients.id
+        )
+        self.assert_status_code(
+            400, user_client.patch(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с дублирующимися ингредиентами должен быть невалидным'
+
+    def test_create_recipe_without_tags(
+        self,
+        user_client,
+        image_str,
+        recipe_with_ingredients,
+        ingredient,
+        ingredient2,
+    ):
+        """Test recipe create without tags"""
+        url = self.urls['recipe_list']
+        recipe_data = {
+            'name': 'test_recipe',
+            'text': 'test_text',
+            'cooking_time': 100,
+            'image': image_str,
+            'ingredients': [
+                {'id': ingredient.id, 'amount': 101},
+                {'id': ingredient2.id, 'amount': 102},
+            ],
+        }
+        self.assert_status_code(
+            400, user_client.post(url, recipe_data, format='json'), url=url
+        ), 'Рецепт без тегов не должен быть валидным'
+
+    def test_create_recipe_with_doubled_tags(
+        self, user_client, image_str, tag, recipe_with_ingredients
+    ):
+        """Test recipe create with doubled tags"""
+        url = self.urls['recipe_list']
+        recipe_data = {
+            'name': 'test_recipe',
+            'text': 'test_text',
+            'cooking_time': 100,
+            'image': image_str,
+            'tags': [tag.id, tag.id],
+        }
+        self.assert_status_code(
+            400, user_client.post(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с одинаковыми тегами должен быть невалидным'
+        url = self.urls['recipe_detail'].format(
+            recipe_id=recipe_with_ingredients.id
+        )
+        self.assert_status_code(
+            400, user_client.patch(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с дублирующимися ингредиентами должен быть невалидным'
+
+    def test_create_recipe_with_zero_cooking_time(
+        self, user_client, image_str, recipe_with_ingredients
+    ):
+        """Test recipe create with zero cooking time"""
+        url = self.urls['recipe_list']
+        recipe_data = {
+            'name': 'test_recipe',
+            'text': 'test_text',
+            'cooking_time': 0,
+            'image': image_str,
+        }
+        self.assert_status_code(
+            400, user_client.post(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с нулевым временем приготовления должен быть невалидным'
+        url = self.urls['recipe_detail'].format(
+            recipe_id=recipe_with_ingredients.id
+        )
+        self.assert_status_code(
+            400, user_client.patch(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с дублирующимися ингредиентами должен быть невалидным'
+
+    def test_create_recipe_with_doubled_ingredients(
+        self, user_client, ingredient, image_str, recipe_with_ingredients
+    ):
+        """Test recipe create with doubled ingredients"""
+        url = self.urls['recipe_list']
+        recipe_data = {
+            'name': 'test_recipe',
+            'text': 'test_text',
+            'cooking_time': 100,
+            'image': image_str,
+            'ingredients': [
+                {'id': ingredient.id, 'amount': 101},
+                {'id': ingredient.id, 'amount': 102},
+            ],
+        }
+        self.assert_status_code(
+            400, user_client.post(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с дублирующимися ингредиентами должен быть невалидным'
+        url = self.urls['recipe_detail'].format(
+            recipe_id=recipe_with_ingredients.id
+        )
+        self.assert_status_code(
+            400, user_client.patch(url, recipe_data, format='json'), url=url
+        ), 'Рецепт с дублирующимися ингредиентами должен быть невалидным'
+
     def test_update_recipe(self, user_client, recipe_with_ingredients, tag):
         """Test recipe update"""
         url = self.urls['recipe_detail'].format(
