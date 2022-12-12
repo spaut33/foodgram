@@ -156,6 +156,49 @@ class RecipeCreateSerializer(RecipeSerializer):
             'cooking_time',
         )
 
+    def validate(self, data):
+        if 'ingredients' not in data:
+            raise serializers.ValidationError(
+                {
+                    'ingredients': _(
+                        'Необходимо указать хотя бы один ингредиент.'
+                    )
+                }
+            )
+        if 'tags' not in data:
+            raise serializers.ValidationError(
+                {'tags', _('Необходимо указать хотя бы один тег.')}
+            )
+        return data
+
+    def validate_ingredients(self, value):
+        """Проверка, что ингредиент не повторяется"""
+        ingredients_ids = [ingredient['id'] for ingredient in value]
+        if len(ingredients_ids) != len(set(ingredients_ids)):
+            raise serializers.ValidationError(
+                _('Ингредиенты не должны повторяться.')
+            )
+        return value
+
+    def validate_cooking_time(self, value):
+        """Проверка что время приготовления больше 0"""
+        if value < 1:
+            raise serializers.ValidationError(
+                _('Время приготовления должно быть больше 0.')
+            )
+        return value
+
+    def validate_tags(self, value):
+        """Проверка что теги не повторяются"""
+        if not value:
+            raise serializers.ValidationError(
+                _('Необходимо указать хотя бы один тег')
+            )
+        tags = [tag.id for tag in value]
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError(_('Теги не должны повторяться.'))
+        return value
+
     def create_ingredients(self, recipe, ingredients):
         """Создает ингредиенты для рецепта"""
         try:
@@ -190,7 +233,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         recipe.ingredients.clear()
         recipe.tags.set(tags)
         self.create_ingredients(recipe, ingredients)
-        recipe.save()
         return recipe
 
     def to_representation(self, recipe):
