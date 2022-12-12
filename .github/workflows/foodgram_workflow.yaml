@@ -67,7 +67,7 @@ jobs:
         context: ./backend/
         file: ./backend/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_HUB_NAME }}/foodgram:latest
+        tags: ${{ secrets.DOCKER_HUB_NAME }}/foodgram-backend:latest
 
   deploy:
     runs-on: ubuntu-20.04
@@ -81,9 +81,21 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_HUB_NAME }}/foodgram:latest
+            cd ./foodgram
+            sudo docker pull ${{ secrets.DOCKER_HUB_NAME }}/foodgram-backend:latest
             sudo docker-compose stop
             sudo docker-compose rm backend
             touch .env
             echo "${{ secrets.ENV_FILE }}" > .env
             sudo docker-compose up -d --build
+
+  send_message:
+    runs-on: ubuntu-20.04
+    needs: deploy
+    steps:
+      - name: send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: ${{ github.workflow }} успешно выполнен!
